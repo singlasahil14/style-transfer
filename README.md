@@ -5,12 +5,12 @@ style transfer code for generating stylized images using content and style loss 
 tensorflow r1.3
 
 ## Documentation
-# Training Style Transfer Networks
-run ./setup.sh to download and extract MS COCO dataset
-run python fast_style.py --test-path data/content/ --train-path ~/tfdata/ --result-path test-fast/ --style-path data/style/wave.jpg
+### Training Style Transfer Networks
+./setup.sh # to download and extract MS COCO dataset
+python fast_style.py --test-path data/content/ --train-path data/train/ --result-path test-fast/ --style-path data/style/wave.jpg
 To access all command line arguments, run python fast_style.py --help
 
-# Stylizing a single image
+### Stylizing a single image
 python slow_style.py --style-path data/style/wave.jpg --content-path data/content/stata.jpg --result-path test-slow/
 To access all command line arguments, run python slow_style.py --help
 
