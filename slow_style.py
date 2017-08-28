@@ -8,7 +8,6 @@ def main():
 
   layerwise_content_weights_dict = create_layerwise_loss_weights_dict(options.content_layers, options.layerwise_content_weights)
   layerwise_style_weights_dict = create_layerwise_loss_weights_dict(options.style_layers, options.layerwise_style_weights)
-  print layerwise_content_weights_dict, layerwise_style_weights_dict
 
   minimizer = SlowLossMinimizer()
   minimizer.setup_feature_fn(model_identifier=options.loss_network, pool_layer=options.pool_layer, padding=options.padding, 
