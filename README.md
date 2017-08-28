@@ -1,7 +1,7 @@
-# style-transfer
+## style-transfer
 style transfer code for generating stylized images using content and style loss from different layers, from different loss networks (vgg-16, vgg-19, inception-v1, inception-v2, inception-v3 trained on imagenet, inception-v3 trained on openimages, inception-v4
 
-# Requirements
+## Requirements
 tensorflow r1.3
 
 ### Documentation
@@ -14,11 +14,11 @@ To access all command line arguments, run python fast_style.py --help
 python slow_style.py --style-path data/style/wave.jpg --content-path data/content/stata.jpg --result-path test-slow/
 To access all command line arguments, run python slow_style.py --help
 
-# Roadmap
+## Roadmap
 Add explanatory comments
 Expose more command-line arguments
 
-# Contributing
+## Contributing
 Please feel free to:
 
 Create an issue
