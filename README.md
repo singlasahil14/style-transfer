@@ -6,8 +6,8 @@ tensorflow r1.3
 
 ## Documentation
 ### Training Style Transfer Networks
-`./setup.sh
-python fast_style.py --test-path data/content/ --train-path data/train/ --result-path test-fast/ --style-path data/style/wave.jpg`
+`./setup.sh`
+`python fast_style.py --test-path data/content/ --train-path data/train/ --result-path test-fast/ --style-path data/style/wave.jpg`
 To access all command line arguments, run python fast_style.py --help
 
 ### Stylizing a single image
