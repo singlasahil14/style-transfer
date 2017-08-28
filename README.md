@@ -20,9 +20,8 @@ To access all command line arguments, run python slow_style.py --help
 
 ### Printing model layers with tensor sizes
 ```bash
-python slow_style.py --style-path data/style/wave.jpg --content-path data/content/stata.jpg --result-path test-slow/
-```
-To access all command line arguments, run python slow_style.py --help
+python print_model_layers.py --network inception-v4```
+To access all command line arguments, run python print_model_layers.py --help
 
 ## Roadmap
 - [ ] Add explanatory comments
