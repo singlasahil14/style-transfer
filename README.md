@@ -6,7 +6,7 @@ tensorflow r1.3
 
 ## Documentation
 ### Training Style Transfer Networks
-./setup.sh # to download and extract MS COCO dataset
+./setup.sh
 python fast_style.py --test-path data/content/ --train-path data/train/ --result-path test-fast/ --style-path data/style/wave.jpg
 To access all command line arguments, run python fast_style.py --help
 
@@ -15,8 +15,8 @@ python slow_style.py --style-path data/style/wave.jpg --content-path data/conten
 To access all command line arguments, run python slow_style.py --help
 
 ## Roadmap
-Add explanatory comments
-Expose more command-line arguments
+- [ ] Add explanatory comments
+- [ ] Expose more command-line arguments
 
 ## Contributing
 Please feel free to:
