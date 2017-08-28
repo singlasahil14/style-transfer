@@ -14,6 +14,10 @@ To access all command line arguments, run python fast_style.py --help
 `python slow_style.py --style-path data/style/wave.jpg --content-path data/content/stata.jpg --result-path test-slow/`
 To access all command line arguments, run python slow_style.py --help
 
+### Printing model layers with tensor sizes
+`python slow_style.py --style-path data/style/wave.jpg --content-path data/content/stata.jpg --result-path test-slow/`
+To access all command line arguments, run python slow_style.py --help
+
 ## Roadmap
 - [ ] Add explanatory comments
 - [ ] Expose more command-line arguments
@@ -21,7 +25,7 @@ To access all command line arguments, run python slow_style.py --help
 ## Contributing
 Please feel free to:
 
-Create an issue
-Open a Pull Request
-Join the [gitter chat](https://gitter.im/style-transfer/Lobby)
-Share your success stories!
+* Create an issue
+* Open a Pull Request
+* Join the [gitter chat](https://gitter.im/style-transfer/Lobby)
+* Share your success stories!
