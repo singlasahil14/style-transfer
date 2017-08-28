@@ -13,11 +13,15 @@ python fast_style.py --test-path data/content/ --train-path data/train/ --result
 To access all command line arguments, run python fast_style.py --help
 
 ### Stylizing a single image
-`python slow_style.py --style-path data/style/wave.jpg --content-path data/content/stata.jpg --result-path test-slow/`
+```bash
+python slow_style.py --style-path data/style/wave.jpg --content-path data/content/stata.jpg --result-path test-slow/
+```
 To access all command line arguments, run python slow_style.py --help
 
 ### Printing model layers with tensor sizes
-`python slow_style.py --style-path data/style/wave.jpg --content-path data/content/stata.jpg --result-path test-slow/`
+```bash
+python slow_style.py --style-path data/style/wave.jpg --content-path data/content/stata.jpg --result-path test-slow/
+```
 To access all command line arguments, run python slow_style.py --help
 
 ## Roadmap
