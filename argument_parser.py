@@ -65,7 +65,7 @@ class _Parser(ArgumentParser):
     self.add_argument('--train-path', type=str, help='train data path if precomputed is false, else precomputed features path', required=True)
     self.add_argument('--train-image-size', default=None, type=int, help='size of training images after resizing (default: %s)' % TRAIN_IMAGE_SIZE)
     self.add_argument('--subset-size', default=None, type=int, help='size of subset of training data (default: %(default)s)')
-    self.add_argument('--batch-size', default=4, type=int, help='batch size (default %(default)s)')
+    self.add_argument('--batch-size', default=16, type=int, help='batch size (default %(default)s)')
 
   def add_style_transfer_network_arguments(self):
     self.add_argument('--conv-separable', default=False, help='use depthwise separable convolution', action='store_true')

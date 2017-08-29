@@ -331,12 +331,12 @@ class FastLossMinimizer(LossMinimizer):
   def setup_compute_graph(self, conv_separable=False, nonlinearity='relu', decoder_norm=True, resize_factor=0, variable_scope_name='transform'):
     self.variable_scope_name = variable_scope_name
     stylize_network_entity = stylize_network(self.num_styles, conv_separable=conv_separable, nonlinearity=nonlinearity)
-    stylize_fn = lambda x,y: stylize_network_entity.stylize(x, y, decoder_norm=decoder_norm, resize_factor=resize_factor)
+    self._stylize_fn = lambda x,y: stylize_network_entity.stylize(x, y, decoder_norm=decoder_norm, resize_factor=resize_factor)
     self._style_ids = tf.placeholder(shape=(None,), dtype=tf.int32, name='style_ids')
     with tf.variable_scope(self.variable_scope_name):
-      self._eval_images = stylize_fn(self._input_images, self._style_ids)
+      self._eval_images = self._stylize_fn(self._input_images, self._style_ids)
     with tf.variable_scope(self.variable_scope_name, reuse=True):
-      self._stylized_train_images = stylize_fn(self._train_images, self._train_style_ids)
+      self._stylized_train_images = self._stylize_fn(self._train_images, self._train_style_ids)
 
   def setup_train_step(self, learning_rate=1e-3):
     trainable_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.variable_scope_name)
@@ -373,9 +373,11 @@ class FastLossMinimizer(LossMinimizer):
   def _print_inference_times(self):
     print('Print cpu inference times for test images')
     with tf.device('/cpu:0'):
+      with tf.variable_scope(self.variable_scope_name, reuse=True):
+        _cpu_eval_images = self._stylize_fn(self._input_images, self._style_ids)
       for test_image in self.test_images:
         start_time = time.time()
-        self._sess.run(self._eval_images, feed_dict={self._style_ids: [0], self._input_images: [test_image]})
+        self._sess.run(_cpu_eval_images, feed_dict={self._style_ids: [0], self._input_images: [test_image]})
         height, width, depth = test_image.shape
         print('CPU inference time for %dx%dx%d image: %f' % (height, width, depth, time.time()-start_time))
     print('')
