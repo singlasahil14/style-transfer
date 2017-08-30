@@ -54,7 +54,7 @@ _content_layers_dict = {
 
 _style_layers_dict = {
   'vgg-16': ('conv3_1', 'conv4_1', 'conv5_1'), 
-  'vgg-19': ('conv2_2', 'conv3_1', 'conv4_1', 'conv5_1'),
+  'vgg-19': ('conv3_1', 'conv4_1', 'conv5_1'),
   'inception-v1': ('Conv2d_2c_3x3', 'Mixed_3c', 'Mixed_4b', 'Mixed_5b'),
   'inception-v2': ('Conv2d_2c_3x3', 'Mixed_3b', 'Mixed_4a', 'Mixed_5a'),
   'inception-v3': ('Conv2d_4a_3x3', 'Mixed_5b', 'Mixed_6a', 'Mixed_7a'),

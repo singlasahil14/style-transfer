@@ -85,7 +85,8 @@ class LossMinimizer:
     tensor_dict = dict(zip(tensor_dict.keys(), map(tf.constant, tensor_values)))
     return tensor_dict
 
-  def _setup_stylewise_loss_weights(self, default_style_weight, default_tv_weight, stylewise_style_weights_dict={}, stylewise_tv_weights_dict={}):
+  def _setup_stylewise_loss_weights(self, default_style_weight, default_tv_weight, 
+                                    stylewise_style_weights_dict={}, stylewise_tv_weights_dict={}):
     style_weights_np = np.asarray([default_style_weight]*self.num_styles)
     tv_weights_np = np.asarray([default_tv_weight]*self.num_styles)
     for i,style_name in enumerate(self.style_names):
@@ -121,8 +122,9 @@ class LossMinimizer:
 
     for key in pred_batch.keys():
       batch_size, height, width, num_channels = tensor_shape(pred_batch[key])
-      layer_content_loss = self.content_weight*tf.nn.l2_loss(pred_batch[key]-target_content_batch[key])
-      self._layerwise_content_losses_dict[key] = layer_content_loss/tf.to_float(batch_size*height*width*num_channels)
+      if key in target_content_batch:
+        layer_content_loss = self.content_weight*tf.nn.l2_loss(pred_batch[key]-target_content_batch[key])
+        self._layerwise_content_losses_dict[key] = layer_content_loss/tf.to_float(batch_size*height*width*num_channels)
 
       pred_style_value = self._gram_matrix(pred_batch[key])
       style_losses = tf.map_fn(lambda x: x[2]*tf.nn.l2_loss(x[0]-x[1]), 
@@ -273,6 +275,7 @@ class SlowLossMinimizer(LossMinimizer):
 class FastLossMinimizer(LossMinimizer):
   def __init__(self):
     LossMinimizer.__init__(self)
+    self._is_gpu_present = len(get_available_gpus()) > 0
 
   def _setup_models_and_test_results_path(self, test_path):
     self.models_path = os.path.join(self.result_path, 'models')
@@ -292,14 +295,15 @@ class FastLossMinimizer(LossMinimizer):
     iterator = data_reader.iterator
     feed_images = iterator.get_next()
     features_dict = self._features_fn(feed_images)
-    feature_keys = ['image'] + self.content_layers
+    feature_keys = ['image'] + list(self.content_layers)
+    content_tensors = [features_dict[key] for key in self.content_layers]
 
     os.makedirs(result_path)
     self._sess.run(iterator.initializer)
     i = 0
     while True:
       try:
-        feature_values = self._sess.run([feed_images] + features_dict.values())
+        feature_values = self._sess.run([feed_images] + content_tensors)
         if(i==0):
           bcolz_arrs_dict = open_bcolz_arrays(result_path, feature_keys, feature_values, mode='w', attr_dict=self._loss_network_attrs)
         else:
@@ -325,7 +329,7 @@ class FastLossMinimizer(LossMinimizer):
     feature_values = self.iterator.get_next()
     self._train_images = feature_values[0]
     content_values = feature_values[1:]
-    self._target_content_batch = dict(zip(self.content_dict.keys(), content_values))
+    self._target_content_batch = dict(zip(self.content_layers, content_values))
     self._train_style_ids = tf.random_uniform([tf.shape(self._train_images)[0]], maxval=self.num_styles, dtype=tf.int32)
 
   def setup_compute_graph(self, conv_separable=False, nonlinearity='relu', decoder_norm=True, resize_factor=0, variable_scope_name='transform'):
@@ -337,12 +341,6 @@ class FastLossMinimizer(LossMinimizer):
       self._eval_images = self._stylize_fn(self._input_images, self._style_ids)
     with tf.variable_scope(self.variable_scope_name, reuse=True):
       self._stylized_train_images = self._stylize_fn(self._train_images, self._train_style_ids)
-
-  def setup_train_step(self, learning_rate=1e-3):
-    trainable_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.variable_scope_name)
-    optimizer = tf.train.AdamOptimizer(learning_rate)
-    complete_grads, complete_vars = zip(*optimizer.compute_gradients(self._total_loss, var_list=trainable_vars))
-    self._train_op = optimizer.apply_gradients(zip(complete_grads, complete_vars))
 
   def _checkpoint_model(self):
     saver = tf.train.Saver()
@@ -371,16 +369,27 @@ class FastLossMinimizer(LossMinimizer):
     print('')
 
   def _print_inference_times(self):
-    print('Print cpu inference times for test images')
+    print('Print inference times for test images')
     with tf.device('/cpu:0'):
       with tf.variable_scope(self.variable_scope_name, reuse=True):
         _cpu_eval_images = self._stylize_fn(self._input_images, self._style_ids)
       for test_image in self.test_images:
+        height, width, depth = test_image.shape
         start_time = time.time()
         self._sess.run(_cpu_eval_images, feed_dict={self._style_ids: [0], self._input_images: [test_image]})
-        height, width, depth = test_image.shape
         print('CPU inference time for %dx%dx%d image: %f' % (height, width, depth, time.time()-start_time))
+        if self._is_gpu_present:
+          start_time = time.time()
+          self._sess.run(self._eval_images, feed_dict={self._style_ids: [0], self._input_images: [test_image]})
+          print('GPU inference time for %dx%dx%d image: %f' % (height, width, depth, time.time()-start_time))
     print('')
+
+  def setup_train_step(self, learning_rate=1e-3):
+    trainable_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.variable_scope_name)
+    optimizer = tf.train.AdamOptimizer(learning_rate)
+    complete_grads, complete_vars = zip(*optimizer.compute_gradients(self._total_loss, var_list=trainable_vars))
+    self._complete_grads_norm = tf.global_norm(complete_grads)
+    self._train_op = optimizer.apply_gradients(zip(complete_grads, complete_vars))
 
   def run_optimization(self, result_path, total_epochs=4, checkpoint_iterations=100, test_path=None):
     self._setup_result_path(result_path)
@@ -397,13 +406,16 @@ class FastLossMinimizer(LossMinimizer):
       start_time = time.time()
       while True:
         try:
-          style_values = self._sess.run([self._train_op, self._total_loss, self._content_loss, self._style_loss, self._tv_loss])
-          self._log_losses(tuple(style_values[1:]))
+          sess_run_values = self._sess.run([self._train_op, self._total_loss, self._content_loss, self._style_loss, self._tv_loss, self._complete_grads_norm])
+          grad_norm_value = sess_run_values[-1]
+    #      print grad_norm_value
+          style_values = tuple(sess_run_values[1:5])
+          self._log_losses(style_values)
           self.iters = self.iters + 1
           if((self.iters-1)%checkpoint_iterations==0):
             time_per_iteration = (time.time()-start_time)/float(self.iters)
             print('epoch %d, iteration: %d: average time/iteration: %f' % (self.epoch_i, self.iters, time_per_iteration))
-            self._checkpoint(tuple(style_values[1:]))
+            self._checkpoint(style_values)
         except tf.errors.OutOfRangeError:
           break
       print("Time per epoch: " + str(time.time()-start_time))
